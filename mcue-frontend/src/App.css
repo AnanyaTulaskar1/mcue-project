@@ -3821,7 +3821,6 @@
   letter-spacing: -1px;
 }
 
-.login-intro,
 .login-step-copy {
   color: var(--muted);
   font-size: 15px;
@@ -3865,16 +3864,6 @@
   border-radius: 9px;
   background: var(--gold-wash);
   color: #ecd48e;
-}
-
-.login-footnote {
-  margin: 25px 0 0;
-  padding-top: 17px;
-  border-top: 1px solid var(--line);
-  color: #828188;
-  font-size: 13px;
-  line-height: 1.6;
-  text-align: center;
 }
 
 .workflow-notice.is-success {

@@ -81,8 +81,6 @@ const Login = ({ onLoginSuccess, authMessage = '' }) => {
       </a>
       <span className="eyebrow login-eyebrow">PRIVATE WORKSPACE</span>
       <h1 id="login-title">{view === 'login' ? 'Welcome back' : 'Reset your password'}</h1>
-      <p className="login-intro">Sign in to manage studio clients, shoots, schedules, and payments.</p>
-
       {error && <div className="notice notice-error login-notice" role="alert">{error}</div>}
       {message && <div className="login-message" role="status">{message}</div>}
 
@@ -112,7 +110,6 @@ const Login = ({ onLoginSuccess, authMessage = '' }) => {
           <button className="login-reset-link" type="button" onClick={() => switchView('request')}>Request another code</button>
         </form>
       )}
-      <p className="login-footnote">Client conversations stay with the studio team. Clients do not need an account.</p>
     </section>
   );
 };
