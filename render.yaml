@@ -2,6 +2,7 @@ services:
   - type: web
     name: mcue-backend
     runtime: node
+    plan: free
     rootDir: mcue-backend
     buildCommand: npm install
     startCommand: npm start
