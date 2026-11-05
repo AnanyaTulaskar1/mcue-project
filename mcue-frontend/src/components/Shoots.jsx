@@ -134,7 +134,7 @@ const Shoots = ({ onNavigate }) => {
       setCompletionShoot(null);
       setNotice({
         type: response.data.paymentEmailSent ? 'success' : 'warning',
-        message: response.data.message,
+        message: [response.data.message, response.data.emailError].filter(Boolean).join(' '),
       });
       await fetchData();
     } catch (requestError) {

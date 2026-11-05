@@ -74,7 +74,7 @@ router.post('/:id/send', async (req, res) => {
       await sendEmail({ to: recipient, subject, html: paymentRequestTemplate(payment) });
     } catch (error) {
       status = 'Failed';
-      emailError = error.message || 'Email delivery failed';
+      emailError = String(error.message || 'Email delivery failed').slice(0, 500);
     }
 
     payment.emailStatus = status;
@@ -97,6 +97,7 @@ router.post('/:id/send', async (req, res) => {
 
     res.json({
       message: status === 'Sent' ? 'Payment request emailed to the client.' : 'The payment request could not be emailed. Check the email settings and try again.',
+      emailError: emailError || undefined,
       payment,
       paymentEmailSent: status === 'Sent'
     });

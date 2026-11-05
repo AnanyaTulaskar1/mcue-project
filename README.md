@@ -5,7 +5,7 @@ MCue is an admin-only studio workspace. The team records client details from dir
 ## Run locally
 
 1. Copy `mcue-backend/.env.example` to `mcue-backend/.env` and set the MongoDB URL, a private JWT secret, and the administrator email and password.
-2. Add SMTP credentials to the same file. The app still saves shoot and payment records if email delivery is unavailable; failed payment emails can be retried from Payments.
+2. Configure email in the same file. Resend is recommended: set `RESEND_API_KEY` and `EMAIL_FROM` to an address on a domain verified in Resend. SMTP credentials are also supported for local development or hosts that allow SMTP. The app still saves shoot and payment records if email delivery is unavailable; failed payment emails can be retried from Payments.
 3. In `mcue-backend`, run `npm install` and `npm run dev`.
 4. In `mcue-frontend`, run `npm install` and `npm run dev`.
 5. Sign in with the configured administrator email and password.
@@ -21,7 +21,7 @@ The repository includes a Render Blueprint at `render.yaml` for the backend. In 
 - `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`: the studio admin login to create on first startup.
 - `CORS_ORIGINS`: the production Vercel origin, such as `https://your-studio.vercel.app` (no trailing slash).
 
-Render runs the backend over HTTP behind its HTTPS proxy. The app keeps local HTTPS for development and uses Render's `PORT` in production. Optional SMTP settings can be added to Render if you want payment emails and password reset codes delivered by email.
+Render runs the backend over HTTP behind its HTTPS proxy. The app keeps local HTTPS for development and uses Render's `PORT` in production. This Blueprint uses Render's Free plan, which blocks outbound SMTP ports 25, 465, and 587. To send payment requests and password reset codes, set `RESEND_API_KEY` and `EMAIL_FROM` in the Render service environment. Create a Resend API key, verify a sending domain in Resend, then set `EMAIL_FROM` to an address on that domain (for example, `MCue Studio <billing@example.com>`). The app uses the Resend HTTPS API when `RESEND_API_KEY` is set; SMTP remains a fallback for local development or paid hosts that allow SMTP.
 
 For the frontend, import the repository into Vercel and set the project root to `mcue-frontend`. Use `npm run build` as the build command and `dist` as the output directory. Add this Vercel environment variable, replacing the example with your Render service URL:
 

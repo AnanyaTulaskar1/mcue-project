@@ -47,7 +47,7 @@ router.post('/password-reset-request', resetRequestLimiter, async (req, res) => 
       user.passwordResetOtpAttempts = 0;
       await user.save();
 
-      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      if (sendEmail.isConfigured()) {
         await sendEmail({
           to: user.email,
           subject: 'MCue Studio - Admin password reset code',

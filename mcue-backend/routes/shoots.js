@@ -183,7 +183,7 @@ router.post('/:id/complete', async (req, res) => {
     });
   } catch (error) {
     emailStatus = 'Failed';
-    emailError = error.message || 'Email delivery failed';
+    emailError = String(error.message || 'Email delivery failed').slice(0, 500);
   }
 
   payment.emailStatus = emailStatus;
@@ -206,6 +206,7 @@ router.post('/:id/complete', async (req, res) => {
 
   res.status(201).json({
     message: emailStatus === 'Sent' ? 'Shoot completed and payment request emailed.' : 'Shoot completed and payment saved, but the email could not be sent.',
+    emailError: emailError || undefined,
     shoot: await populateClient(Shoot.findById(req.params.id)),
     payment,
     paymentEmailSent: emailStatus === 'Sent'

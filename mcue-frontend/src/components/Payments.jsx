@@ -76,7 +76,7 @@ const Payments = () => {
     setNotice(null);
     try {
       const response = await paymentAPI.sendPaymentRequest(payment._id);
-      setNotice({ type: response.data.paymentEmailSent ? 'success' : 'warning', message: response.data.message });
+      setNotice({ type: response.data.paymentEmailSent ? 'success' : 'warning', message: [response.data.message, response.data.emailError].filter(Boolean).join(' ') });
       await fetchPayments();
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Unable to send the payment email.');
