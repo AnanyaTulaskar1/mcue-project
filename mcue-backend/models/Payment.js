@@ -19,7 +19,12 @@ const paymentSchema = new mongoose.Schema({
   paymentInstructions: { type: String, trim: true, maxlength: 2000 },
   emailStatus: { type: String, enum: ['Not sent', 'Sent', 'Failed'], default: 'Not sent' },
   emailSentAt: { type: Date },
-  emailLastError: { type: String, maxlength: 500 }
+  emailLastError: { type: String, maxlength: 500 },
+  reminderClaimedForDueDate: { type: String },
+  reminderClaimedAt: { type: Date },
+  reminderSentForDueDate: { type: String },
+  reminderSentAt: { type: Date },
+  reminderLastError: { type: String, maxlength: 500 }
 }, { timestamps: true });
 
 module.exports = mongoose.models.Payment || mongoose.model('Payment', paymentSchema);

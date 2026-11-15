@@ -9,6 +9,7 @@ const path = require('path');
 const User = require('./models/User');
 const Client = require('./models/Client');
 const Shoot = require('./models/Shoot');
+const { schedulePaymentReminders } = require('./utils/paymentReminders');
 
 const app = express();
 
@@ -124,6 +125,7 @@ mongoose.connect(process.env.MONGO_URI)
     console.log('MongoDB connected successfully');
     await migrateLegacyClientContacts();
     await bootstrapAdmin();
+    schedulePaymentReminders();
     if (useHttps) {
       const sslOptions = {
         key: fs.readFileSync(path.join(__dirname, 'cert.key')),

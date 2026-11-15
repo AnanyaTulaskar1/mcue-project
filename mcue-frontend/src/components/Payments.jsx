@@ -87,7 +87,7 @@ const Payments = () => {
 
   return (
     <div className="workspace-page">
-      <section className="page-heading"><div><span className="eyebrow">INVOICES &amp; COLLECTIONS</span><h1>Payments</h1><p>Payment requests are recorded and emailed when a shoot is marked done.</p></div></section>
+      <section className="page-heading"><div><span className="eyebrow">INVOICES &amp; COLLECTIONS</span><h1>Payments</h1><p>Payment requests are emailed when a shoot is marked done. Unpaid requests get an automatic reminder within 3 days of the due date.</p></div></section>
       {error && <div className="notice notice-error" role="alert">{error}</div>}
       {notice && <div className={`notice workflow-notice is-${notice.type}`} role="status">{notice.message}</div>}
 

@@ -1,5 +1,12 @@
 node_modules/
 .env
+.env.*
+!.env.example
 dist/
-mcue-backend/*.key
-mcue-backend/*.crt
+*.key
+*.crt
+
+# Local reference exports and reports
+MCue_Postman_Demo_Collection.json
+MCue_Studio_Manager_Project_Report.*
+MCue_Studio_Manager_Requested_Sections.*
