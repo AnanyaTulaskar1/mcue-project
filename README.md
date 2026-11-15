@@ -34,6 +34,7 @@ Deploy the frontend, copy its production origin into Render's `CORS_ORIGINS`, th
 ## Studio workflow
 
 - Add a client with a name and email, then add their shoot and schedule details.
+- When a shoot is added as Requested or Acknowledged, the client receives a request receipt. Setting it to Scheduled sends a confirmation; changing its title, date, time, location, or shoot details sends an update; cancelling it sends a cancellation notice. Studio notes remain internal. Email delivery failures are shown after saving, and email attempts are recorded in email history.
 - When the shoot is done, record the amount, currency, optional due date, and payment link or instructions. The app saves the completed shoot and payment record, then emails the payment request to the client email on file.
 - The backend emails one automatic reminder for each unpaid payment when it is within 3 days of its due date. By default, the daily check runs at 9:00 AM India time. Set `PAYMENT_REMINDER_TIME` (`HH:MM`) and `PAYMENT_REMINDER_TIMEZONE` (an IANA timezone) to change that schedule. A reminder is recorded in email history; if delivery fails, the job can retry on its next run while the payment is still within the reminder window.
 - The backend also runs a reminder check at startup. If the host sleeps between requests, use its scheduled-job feature to run `npm run reminders` from `mcue-backend` daily; the command is safe to run more than once and skips reminders already sent for the current due date.

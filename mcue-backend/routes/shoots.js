@@ -8,11 +8,19 @@ const auth = require('../middleware/auth');
 const requireAdmin = require('../middleware/requireAdmin');
 const sendEmail = require('../utils/sendEmail');
 const paymentRequestTemplate = require('../utils/paymentRequestTemplate');
+const sendShootNotification = require('../utils/shootNotifications');
 
 const router = express.Router();
 router.use(auth, requireAdmin);
 
 const statuses = ['Requested', 'Acknowledged', 'Scheduled', 'In Progress', 'Completed', 'Cancelled'];
+const notificationLabels = {
+  request: 'Request receipt',
+  confirmation: 'Confirmation',
+  update: 'Details update',
+  status: 'Status update',
+  cancellation: 'Cancellation'
+};
 const needsDateTime = (status) => ['Scheduled', 'In Progress', 'Completed'].includes(status);
 const validDate = (value) => !value || !Number.isNaN(new Date(value).getTime());
 const validTime = (value) => !value || /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
@@ -54,7 +62,25 @@ router.post('/', async (req, res) => {
     }
     const createdShoot = await Shoot.create(data);
     const shoot = await populateClient(Shoot.findById(createdShoot._id));
-    res.status(201).json(shoot);
+    const notificationType = shoot.status === 'Scheduled'
+      ? 'confirmation'
+      : ['Requested', 'Acknowledged'].includes(shoot.status)
+        ? 'request'
+        : shoot.status === 'Cancelled' ? null : 'status';
+    const notification = notificationType
+      ? await sendShootNotification(shoot, notificationType)
+      : null;
+    const message = !notification
+      ? 'Shoot added to the studio schedule.'
+      : notification.sent
+        ? `${notificationLabels[notificationType]} email accepted by the email provider.`
+        : 'Shoot added, but the client email could not be sent.';
+    res.status(201).json({
+      ...shoot.toObject(),
+      message,
+      notificationSent: notification?.sent,
+      emailError: notification?.error
+    });
   } catch (error) {
     if (error.name === 'ValidationError') return res.status(400).json({ message: error.message });
     console.error('CREATE SHOOT ERROR:', error);
@@ -98,15 +124,60 @@ router.put('/:id', async (req, res) => {
     if (data.status === 'Completed' && shoot.status !== 'Completed') {
       return res.status(400).json({ message: 'Use Mark done to complete the shoot and email its payment request.' });
     }
+    if (shoot.status === 'Completed' && data.status && data.status !== 'Completed') {
+      return res.status(400).json({ message: 'A completed shoot cannot be reopened.' });
+    }
     const nextStatus = data.status || shoot.status;
     const nextDate = Object.prototype.hasOwnProperty.call(data, 'date') ? data.date : shoot.date;
     const nextTime = Object.prototype.hasOwnProperty.call(data, 'time') ? data.time : shoot.time;
     if (needsDateTime(nextStatus) && (!nextDate || !nextTime)) {
       return res.status(400).json({ message: 'A scheduled shoot needs both a date and a time.' });
     }
+
+    const previous = {
+      status: shoot.status,
+      title: shoot.title,
+      date: shoot.date ? new Date(shoot.date).getTime() : null,
+      time: shoot.time || '',
+      location: shoot.location || '',
+      description: shoot.description || '',
+      clientId: String(shoot.clientId)
+    };
     Object.assign(shoot, data);
     await shoot.save();
-    res.json(await populateClient(Shoot.findById(shoot._id)));
+
+    const changedFields = [];
+    if (previous.title !== shoot.title) changedFields.push('session title');
+    if (previous.date !== (shoot.date ? new Date(shoot.date).getTime() : null)) changedFields.push('date');
+    if (previous.time !== (shoot.time || '')) changedFields.push('time');
+    if (previous.location !== (shoot.location || '')) changedFields.push('location');
+    if (previous.description !== (shoot.description || '')) changedFields.push('shoot details');
+    if (previous.clientId !== String(shoot.clientId)) changedFields.push('client');
+
+    let notificationType = null;
+    if (previous.status !== shoot.status) {
+      if (shoot.status === 'Scheduled') notificationType = 'confirmation';
+      else if (shoot.status === 'Cancelled') notificationType = 'cancellation';
+      else notificationType = 'status';
+    } else if (changedFields.length && !['Completed', 'Cancelled'].includes(shoot.status)) {
+      notificationType = 'update';
+    }
+
+    const notification = notificationType
+      ? await sendShootNotification(shoot, notificationType, changedFields)
+      : null;
+    const savedShoot = await populateClient(Shoot.findById(shoot._id));
+    const message = !notification
+      ? 'Shoot details saved.'
+      : notification.sent
+        ? `Shoot saved. ${notificationLabels[notificationType]} email accepted by the email provider.`
+        : 'Shoot saved, but the client email could not be sent.';
+    res.json({
+      ...savedShoot.toObject(),
+      message,
+      notificationSent: notification?.sent,
+      emailError: notification?.error
+    });
   } catch (error) {
     if (error.name === 'ValidationError') return res.status(400).json({ message: error.message });
     console.error('UPDATE SHOOT ERROR:', error);

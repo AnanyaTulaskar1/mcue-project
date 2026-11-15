@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { clientAPI, paymentAPI, shootAPI } from '../services/api';
 
 const emptyShoot = { title: '', clientId: '', date: '', time: '', location: '', status: 'Scheduled', description: '', notes: '' };
-const editableStatuses = ['Scheduled', 'Cancelled'];
+const editableStatuses = ['Requested', 'Acknowledged', 'Scheduled', 'In Progress', 'Completed', 'Cancelled'];
 const needsDateTime = (status) => ['Scheduled', 'In Progress', 'Completed'].includes(status);
 const dateInput = (value) => value ? String(value).slice(0, 10) : '';
 const formatDate = (value, options = { month: 'short', day: 'numeric', year: 'numeric' }) => {
@@ -108,10 +108,14 @@ const Shoots = ({ onNavigate }) => {
     setError('');
     try {
       const payload = { ...shootForm, date: shootForm.date || '', time: shootForm.time || '' };
-      if (editingShoot) await shootAPI.updateShoot(editingShoot._id, payload);
-      else await shootAPI.createShoot(payload);
+      const response = editingShoot
+        ? await shootAPI.updateShoot(editingShoot._id, payload)
+        : await shootAPI.createShoot(payload);
       closeShootModal();
-      setNotice({ type: 'success', message: editingShoot ? 'Shoot details saved.' : 'Shoot added to the studio schedule.' });
+      setNotice({
+        type: response.data.notificationSent === false ? 'warning' : 'success',
+        message: [response.data.message || (editingShoot ? 'Shoot details saved.' : 'Shoot added to the studio schedule.'), response.data.emailError].filter(Boolean).join(' '),
+      });
       await fetchData();
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Unable to save this shoot. Please try again.');
@@ -159,7 +163,7 @@ const Shoots = ({ onNavigate }) => {
   return (
     <div className="workspace-page">
       <section className="page-heading">
-        <div><span className="eyebrow">SCHEDULE &amp; PRODUCTION</span><h1>Shoots</h1><p>Add each booking after a client conversation, then track its schedule through completion.</p></div>
+        <div><span className="eyebrow">SCHEDULE &amp; PRODUCTION</span><h1>Shoots</h1><p>Clients receive emails when a request is received, a shoot is confirmed, or booking details change.</p></div>
         <button className="button button-primary" onClick={() => openShootModal()} type="button"><span className="button-plus" aria-hidden="true">+</span> Add shoot</button>
       </section>
 
@@ -226,10 +230,11 @@ const Shoots = ({ onNavigate }) => {
                 <label className="form-field">Shoot date<input name="date" type="date" value={shootForm.date} onChange={(event) => setShootForm((current) => ({ ...current, date: event.target.value }))} required={needsDateTime(shootForm.status)} /></label>
                 <label className="form-field">Start time<input name="time" type="time" value={shootForm.time} onChange={(event) => setShootForm((current) => ({ ...current, time: event.target.value }))} required={needsDateTime(shootForm.status)} /></label>
                 <label className="form-field">Location <span className="optional-label">Optional</span><input name="location" value={shootForm.location} onChange={(event) => setShootForm((current) => ({ ...current, location: event.target.value }))} placeholder="Studio or venue" /></label>
-                <label className="form-field">Status<select name="status" value={shootForm.status} onChange={(event) => setShootForm((current) => ({ ...current, status: event.target.value }))}>{editableStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
+                <label className="form-field">Status<select name="status" value={shootForm.status} onChange={(event) => setShootForm((current) => ({ ...current, status: event.target.value }))} disabled={editingShoot?.status === 'Completed'}>{editableStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
                 <label className="form-field shoot-client-brief">Shoot details <span className="optional-label">Optional</span><textarea name="description" value={shootForm.description} onChange={(event) => setShootForm((current) => ({ ...current, description: event.target.value }))} rows="3" placeholder="Session type, package, or client requirements" /></label>
                 <label className="form-field shoot-client-brief">Studio notes <span className="optional-label">Optional</span><textarea name="notes" value={shootForm.notes} onChange={(event) => setShootForm((current) => ({ ...current, notes: event.target.value }))} rows="3" placeholder="Equipment, setup, or follow-up details" /></label>
               </div>
+              <p className="payment-email-hint">Requested or acknowledged shoots send a receipt email. Scheduled shoots send a confirmation. Changes to the title, date, time, location, or shoot details send an update; cancellations are emailed too. Studio notes stay private.</p>
               <div className="modal-actions"><button className="button button-quiet" onClick={closeShootModal} type="button">Cancel</button><button className="button button-primary" disabled={isSaving} type="submit">{isSaving ? 'Saving…' : editingShoot ? 'Save changes' : 'Add to schedule'}</button></div>
             </form>
           </section>
