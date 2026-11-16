@@ -38,6 +38,9 @@ router.post('/password-reset-request', resetRequestLimiter, async (req, res) => 
   if (!req.body.email || typeof req.body.email !== 'string') {
     return res.status(400).json({ message: 'Email is required.' });
   }
+  if (process.env.NODE_ENV === 'production' && !sendEmail.isConfigured()) {
+    return res.status(503).json({ message: 'Password reset is temporarily unavailable because email delivery is not configured. Please contact the studio administrator.' });
+  }
   try {
     const user = await findAdminByEmail(req.body.email);
     if (user) {
@@ -60,7 +63,7 @@ router.post('/password-reset-request', resetRequestLimiter, async (req, res) => 
     res.json({ message: 'If an admin account exists for that email, a reset code has been sent.' });
   } catch (error) {
     console.error('ADMIN PASSWORD RESET REQUEST ERROR:', error);
-    res.status(500).json({ message: 'Unable to send a reset code right now.' });
+    res.status(503).json({ message: 'Unable to send a reset code right now. Please try again later or contact the studio administrator.' });
   }
 });
 

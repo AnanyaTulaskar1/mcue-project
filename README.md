@@ -10,7 +10,7 @@ MCue is an admin-only studio workspace. The team records client details from dir
 4. In `mcue-frontend`, run `npm install` and `npm run dev`.
 5. Sign in with the configured administrator email and password.
 
-The first backend launch creates the configured admin account if it does not exist. If the address belongs to an old client login, configuring it as `ADMIN_EMAIL` promotes that account to the studio admin. Existing client accounts are copied to the new client-contact collection, and linked shoots are remapped so their history remains available.
+The backend creates the configured admin account if it does not exist. On startup, it also syncs the configured `ADMIN_PASSWORD` to an existing account at `ADMIN_EMAIL`, and promotes that account if it was previously a client login. Restart or redeploy the backend after changing these values. Existing client accounts are copied to the new client-contact collection, and linked shoots are remapped so their history remains available.
 
 ## Deploy with Render and Vercel
 

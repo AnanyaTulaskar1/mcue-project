@@ -6,6 +6,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 const Client = require('./models/Client');
 const Shoot = require('./models/Shoot');
@@ -108,11 +109,12 @@ async function bootstrapAdmin() {
     console.log(`Admin account provisioned for ${email}.`);
     return;
   }
-  if (admin.role !== 'admin') {
+  const passwordMatches = await bcrypt.compare(password, admin.password || '');
+  if (admin.role !== 'admin' || !passwordMatches) {
     admin.role = 'admin';
-    admin.password = password;
+    if (!passwordMatches) admin.password = password;
     await admin.save();
-    console.log(`Admin account enabled for ${email}.`);
+    console.log(`Admin account synchronized for ${email}.`);
   }
 }
 
